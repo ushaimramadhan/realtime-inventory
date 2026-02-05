@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Service 1: Database
+  db:
+    image: postgres:16-alpine
+    container_name: inventory_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: inventory_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - inventory_net
+
+  # Service 2: Backend API
+  api:
+    build: ./backend
+    container_name: inventory_api
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/usr/src/app # Bind mount: Perubahan code di Windows langsung berefek ke container
+      - /usr/src/app/node_modules # Anonymous volume: Mencegah node_modules container tertimpa host
+    environment:
+      - DB_HOST=db
+      - DB_USER=admin
+      - DB_PASS=rootpassword
+      - DB_NAME=inventory_db
+      - PORT=4000
+    depends_on:
+      - db
+    networks:
+      - inventory_net
+
+volumes:
+  pgdata:
+
+networks:
+  inventory_net:
